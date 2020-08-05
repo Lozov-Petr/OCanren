@@ -46,6 +46,9 @@ ppxnew:
 plugin:
 	$(OB) camlp5/pa_ocanren.cmo
 
+unfolding:
+	$(OB) -r -Is $(SRC),src/Unfolding src/unfolding/Unfolding.native
+
 celan: clean
 
 clean: clean_tests
