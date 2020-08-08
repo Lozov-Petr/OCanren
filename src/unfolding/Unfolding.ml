@@ -17,6 +17,8 @@ module Unfold = struct
                | Disj of stream * stream
 
   (**************************************************************************)
+  let unification_count = ref 0
+  (**************************************************************************)
 
   let disj a b = Disj (a, b)
   let conj a b = Conj (a, b)
@@ -33,6 +35,7 @@ module Unfold = struct
       | []      -> []
 
   let unify (env, subst) a b =
+    unification_count := !unification_count + 1;
     VarSubst.unify env subst a b >>= fun (_, s) -> Some (env, s)
 
   let fresh (env, subst) f =

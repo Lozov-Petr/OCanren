@@ -61,10 +61,14 @@ let show_nat_list = GT.(show List.ground @@ show_nat)
 
 let _ =
   (* 0.33 *)
-  run_exn show_nat_list (-1) q qh (REPR (fun q -> sorto ((fun k -> nat_list @@ L.init k (fun n -> k - n)) 20) q));
+  (* run_exn show_nat_list (-1) q qh (REPR (fun q -> sorto ((fun k -> nat_list @@ L.init k (fun n -> k - n)) 20) q)); *)
 
   (* 12.68 *)
   (* run_exn show_nat_list (-1) q qh (REPR (fun q -> sorto ((fun k -> nat_list @@ L.init k (fun n -> k - n)) 50) q)); *)
 
+  (* 23244 unifications *)
+  (* run_exn show_nat_list (6) q qh (REPR (fun q -> sorto q (nat_list [0;1;2]))); *)
+
   (* >162 [only 16 answers] *)
-  (* run_exn show_nat_list (24) q qh (REPR (fun q -> sorto q (nat_list [0;1;2;4]))); *)
+  run_exn show_nat_list (6) q qh (REPR (fun q -> sorto q (nat_list [0;1;2;3])));
+  Printf.printf "\n\nUnifications: %d\n" @@ Peep.unification_counter ()

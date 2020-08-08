@@ -61,7 +61,10 @@ let reify_nat_list = List.reify Nat.reify
 let _ =
   (* Unfold.run (-1) Nat.reify (show Nat.logic) (fun q -> leo q (Nat.s Nat.o) Bool.truo) *)
   (* Unfold.run (-1) reify_nat_list show_nat_list (fun q -> sorto ((fun k -> nat_list @@ L.init k (fun n -> k - n)) 50) q) *)
-  Unfold.run (24) reify_nat_list show_nat_list (fun q -> sorto q (nat_list [0;1;2;4]));
+
+  (* 1987 *)
+  Unfold.run (6) reify_nat_list show_nat_list (fun q -> sorto q (nat_list [0;1;2]));
+  Printf.printf "\nUnifications: %d" !Unfold.unification_count
 
 (* let _ = *)
   (* 0.33 *)

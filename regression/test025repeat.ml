@@ -49,8 +49,15 @@ let show_list x = show List.ground show_a x
 let rec int2nat i = if i = 0 then o () else s (int2nat @@ i - 1)
 
 let _ =
-  run_exn show_list (-1) q qh ("test1", fun q ->
-    length q (int2nat 12) &&&
-    check_list q !!true &&&
-    is_repeat q !!true
-  )
+  (* 199 unifications *)
+  run_exn show_list (-1) q qh ("test1", fun q -> length q (int2nat 2) &&& is_repeat q !!true &&& check_list q !!true);
+
+  (* 1535271 unifications *)
+  (* run_exn show_list (-1) q qh ("test1", fun q -> length q (int2nat 10) &&& check_list q !!true &&& is_repeat q !!true); *)
+  (* 6.22s *)
+
+  (* 4605823 unifications *)
+  (* 20.24s *)
+  (* run_exn show_list (-1) q qh ("test1", fun q -> length q (int2nat 11) &&& check_list q !!true &&& is_repeat q !!true); *)
+
+  Printf.printf "\n\nUnifications: %d\n" @@ Peep.unification_counter ()
