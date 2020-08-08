@@ -1,19 +1,20 @@
 
-module Unfolding = struct
+module Unfold = struct
 
-  type state = VarEnv.t * Term.Var.scope * VarSubst.t
+  type state = VarEnv.t * VarSubst.t
 
+  type a = Obj.t
 
-  type 'a program = Unify of 'a * 'a
-                  | Fresh of ('a -> 'a program)
-                  | Invoke of 'a def * 'a list
-                  | Conjunction of 'a program * 'a program
-                  | Disjunction of 'a program * 'a program
-  and 'a def      = ('a list -> 'a program)
-  and 'a call     = 'a def * 'a list
+  type program = Unify of a * a
+               | Fresh of (a -> program)
+               | Invoke of def * a list
+               | Conjunction of program * program
+               | Disjunction of program * program
+  and def      = (a list -> program)
+  and call     = def * a list
 
-  type 'a stream = Conj of state * 'a call list
-                 | Disj of 'a stream * 'a stream
+  type stream  = Conj of state * call list
+               | Disj of stream * stream
 
   (**************************************************************************)
 
@@ -25,21 +26,27 @@ module Unfolding = struct
     | None -> None
     | Some x -> f x
 
-  let unify (env, scope, subst) a b =
-    VarSubst.unify env subst a b >>= fun (_, s) -> Some (env, scope, s)
+  let rec take n l =
+    if n = 0 then [] else
+      match l with
+      | x :: xs -> x :: take (n - 1) xs
+      | []      -> []
 
-  let fresh (env, scope, subst) f =
-    f (VarEnv.fresh ~scope env)
+  let unify (env, subst) a b =
+    VarSubst.unify env subst a b >>= fun (_, s) -> Some (env, s)
+
+  let fresh (env, subst) f =
+    f (VarEnv.fresh env ~scope:Term.Var.non_local_scope)
 
   let disjCmb a b =
     match a, b with
-    | None , b        -> b
-    | a    , None     -> a
+    | None ,  b      -> b
+    | a    ,  None   -> a
     | Some a, Some b -> Some (disj a b)
 
   (**************************************************************************)
 
-  let unfold state (def, args) =
+  let prog2stream state prog =
     let rec p2s st pr =
       match st, pr with
       | Disj (a, b), pr                 -> disjCmb (p2s a pr) @@ p2s b pr
@@ -48,7 +55,10 @@ module Unfolding = struct
       | Conj (s, c), Fresh f            -> p2s st @@ fresh s f
       | st         , Conjunction (a, b) -> p2s st a >>= fun st -> p2s st b
       | st         , Disjunction (a, b) -> disjCmb (p2s st a) @@ p2s st b
-    in p2s (conj state []) @@ def args
+    in p2s (conj state []) prog
+
+  let unfold state (def, args) =
+    prog2stream state @@ def args
 
   (**************************************************************************)
 
@@ -80,4 +90,45 @@ module Unfolding = struct
       end
     | _ -> raise @@ Failure "Unexpected stream configuration"
 
+  let run n reifier printer g =
+    let getTerm (env, subst) x =
+      let r = Logic.make_rr env (Obj.magic @@ VarSubst.reify env subst x) in
+      r#reify reifier
+    in let rec run n q stream =
+      let stream, ans = step stream in
+      let l           = List.length ans in
+      List.iter (fun a -> Printf.printf "%s\n%!" (printer @@ getTerm a q)) @@ take n ans;
+      match stream with
+      | None    -> ()
+      | Some st -> if n < 0 || n > l then run (n - l) q st in
+    let env    = VarEnv.empty () in
+    let subst  = VarSubst.empty in
+    let q      = VarEnv.fresh env ~scope:Term.Var.non_local_scope in
+    let stream = prog2stream (env, subst) @@ g q in
+    match stream with
+    | None    -> ()
+    | Some st -> run n q st
 end
+
+let (!!!) = Obj.magic
+
+module Fresh = struct
+  let succ prev f = Unfold.Fresh (fun x -> prev @@ f (!!!x))
+  let zero  f = f
+  let one   f = succ zero f
+  let two   f = succ one f
+  let three f = succ two f
+  let four  f = succ three f
+  let five  f = succ four f
+  let six   f = succ five f
+end
+
+let (===)  a b = Unfold.Unify (!!!a, !!!b)
+let (|||)  a b = Unfold.Disjunction (a, b)
+let (&&&)  a b = Unfold.Conjunction (a, b)
+let invoke a b = Unfold.Invoke (b, List.map (!!!) a)
+
+let rec conde = function
+  | [x]     -> x
+  | x :: xs -> x ||| conde xs
+  | []      -> raise @@ Failure "'conde' without disjuncts"

@@ -19,7 +19,7 @@
 type stat = {mutable walk_count : int}
 
 let stat = {walk_count = 0}
-         
+
 let walk_counter () = stat.walk_count
 let walk_incr () = stat.walk_count <- stat.walk_count + 1
 
@@ -120,7 +120,7 @@ let rec occurs env subst var term =
 
 let extend ~scope env subst var term  =
   (* if occurs env subst var term then raise Occurs_check *)
-  if Runconf.do_occurs_check () then occurs env subst var term; 
+  if Runconf.do_occurs_check () then occurs env subst var term;
     (* assert (VarEnv.var env var <> VarEnv.var env term); *)
 
   (* It is safe to modify variables destructively if the case of scopes match.
@@ -130,12 +130,12 @@ let extend ~scope env subst var term  =
    * 2) If we do unification after a fresh, then in case of failure it doesn't matter if
    *    the variable is be distructively substituted: we will not look on it in future.
    *)
-  if (scope = var.Term.Var.scope) && (scope <> Term.Var.non_local_scope)
+  (* if (scope = var.Term.Var.scope) && (scope <> Term.Var.non_local_scope)
   then begin
     var.subst <- Some (Obj.repr term);
     subst
   end
-    else
+    else *)
       Term.VarMap.add var (Term.repr term) subst
 
 exception Unification_failed
