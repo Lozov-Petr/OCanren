@@ -27,3 +27,4 @@ let force_counter            = RStream.force_counter
 let from_fun_counter         = RStream.from_fun_counter
 let bind_counter             = RStream.bind_counter
 let mplus_counter            = RStream.mplus_counter
+let interleaving_counter     = RStream.interleaving_counter

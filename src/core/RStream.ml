@@ -21,7 +21,8 @@ type stat = {
     mutable force_counter            : int;
     mutable from_fun_counter         : int;
     mutable bind_counter             : int;
-    mutable mplus_counter            : int
+    mutable mplus_counter            : int;
+    mutable interleaving_counter     : int
 }
 
 let stat = {
@@ -29,7 +30,8 @@ let stat = {
     force_counter            = 0;
     from_fun_counter         = 0;
     bind_counter             = 0;
-    mplus_counter            = 0
+    mplus_counter            = 0;
+    interleaving_counter     = 0
 }
 
 let unwrap_suspended_counter () = stat.unwrap_suspended_counter
@@ -46,6 +48,9 @@ let bind_counter_incr () = stat.bind_counter <- stat.bind_counter + 1
 
 let mplus_counter () = stat.mplus_counter
 let mplus_counter_incr () = stat.mplus_counter <- stat.mplus_counter + 1
+
+let interleaving_counter () = stat.interleaving_counter
+let interleaving_counter_incr () = stat.interleaving_counter <- stat.interleaving_counter + 1
 
 type 'a t =
   | Nil
@@ -65,7 +70,7 @@ let from_fun zz =
   Thunk zz
 
 let suspend ~is_ready f = Waiting [{is_ready; zz=f}]
- 
+
 let rec of_list = function
 | []    -> Nil
 | x::xs -> Cons (x, of_list xs)
@@ -80,9 +85,9 @@ let rec mplus xs ys =
   mplus_counter_incr ();
   match xs with
   | Nil           -> force ys
-  | Cons (x, xs)  -> cons x (from_fun @@ fun () -> mplus (force ys) xs)
-  | Thunk   _     -> from_fun (fun () -> mplus (force ys) xs)
-  | Waiting ss    -> 
+  | Cons (x, xs)  -> interleaving_counter_incr (); cons x (from_fun @@ fun () -> mplus (force ys) xs)
+  | Thunk   _     -> interleaving_counter_incr (); from_fun (fun () -> mplus (force ys) xs)
+  | Waiting ss    ->
     let ys = force ys in
     (* handling waiting streams is tricky *)
     match unwrap_suspended ss, ys with
@@ -109,12 +114,12 @@ and unwrap_suspended ss =
     | None , ss  -> Waiting ss
 
 let rec bind s f =
-  bind_counter_incr (); 
+  bind_counter_incr ();
   match s with
   | Nil           -> Nil
   | Cons (x, s)   -> mplus (f x) (from_fun (fun () -> bind (force s) f))
   | Thunk zz      -> from_fun (fun () -> bind (zz ()) f)
-  | Waiting ss    -> 
+  | Waiting ss    ->
     match unwrap_suspended ss with
     | Waiting ss ->
       let helper {zz} as s = {s with zz = fun () -> bind (zz ()) f} in

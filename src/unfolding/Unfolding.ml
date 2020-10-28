@@ -17,7 +17,10 @@ module Unfold = struct
                | Disj of stream * stream
 
   (**************************************************************************)
-  let unification_count = ref 0
+  let unification_count  = ref 0
+  let steps_calls        = ref 0
+  let unfold_calls       = ref 0
+  let interleaving_count = ref 0
   (**************************************************************************)
 
   let disj a b = Disj (a, b)
@@ -50,7 +53,7 @@ module Unfold = struct
   (**************************************************************************)
 
   let prog2stream state prog =
-    let rec p2s st pr =
+    let rec p2s st pr = unfold_calls := !unfold_calls + 1;
       match st, pr with
       | Disj (a, b), pr                 -> disjCmb (p2s a pr) @@ p2s b pr
       | Conj (s, c), Unify (x, y)       -> unify s x y >>= fun s -> Some (conj s c)
@@ -65,7 +68,7 @@ module Unfold = struct
 
   (**************************************************************************)
 
-  let rec step stream =
+  let rec step stream = steps_calls := !steps_calls + 1;
     let rec splitAnswers stream =
       match stream with
       | Disj (a, b)  ->
@@ -81,7 +84,8 @@ module Unfold = struct
     | Disj (a, b) ->
       begin match step a with
         | None, ans   -> Some b, ans
-        | Some a, ans -> Some (disj b a), ans
+        | Some a, ans -> interleaving_count := !interleaving_count + 1;
+                         Some (disj b a), ans
       end
     | Conj (s, (c::cs)) ->
       begin match unfold s c with

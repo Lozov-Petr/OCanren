@@ -27,4 +27,4 @@ val force_counter            : unit -> int
 val from_fun_counter         : unit -> int
 val bind_counter             : unit -> int
 val mplus_counter            : unit -> int
-                                    
+val interleaving_counter     : unit -> int

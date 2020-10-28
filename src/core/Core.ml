@@ -33,13 +33,13 @@ let stat = {
     disj_counter      = 0;
     delay_counter     = 0
 }
-         
+
 let unification_counter () = stat.unification_count
-let unification_time    () = stat.unification_time 
-let conj_counter        () = stat.conj_counter 
-let disj_counter        () = stat.disj_counter 
-let delay_counter       () = stat.delay_counter 
-                          
+let unification_time    () = stat.unification_time
+let conj_counter        () = stat.conj_counter
+let disj_counter        () = stat.disj_counter
+let delay_counter       () = stat.delay_counter
+
 let unification_incr     () = stat.unification_count <- stat.unification_count + 1
 let unification_time_incr t =
   stat.unification_time <- Mtime.Span.add stat.unification_time (t ())
@@ -279,14 +279,14 @@ let (===) x y st =
   | None    -> unification_time_incr t; failure st
 
 let unify = (===)
-          
+
 let (=/=) x y st =
   match State.diseq x y st with
   | Some st -> success st
   | None    -> failure st
 
 let diseq = (=/=)
-          
+
 let delay g st =
   delay_counter_incr ();
   RStream.from_fun (fun () -> g () st)

@@ -81,14 +81,35 @@ let rec int2nat i = if i = 0 then o () else s (int2nat @@ i - 1)
 
 let _ =
   (* 202 unifications *)
-  Unfold.run (-1) reify_list show_list (fun q -> length q (int2nat 2) &&& is_repeat q !!true &&& check_list q !!true);
+  (* 67 interleavings *)
+  (* 112 steps        *)
+  (* 639 unfolds      *)
+  (* 0.00s            *)
+  (* Unfold.run (-1) reify_list show_list (fun q -> length q (int2nat 2) &&& check_list q !!true &&& is_repeat q !!true); *)
 
-  (* 1564794 unifications *)
+  (* 1564794 unifications  *)
+  (* 3306715 interleavings *)
+  (* 3631488 steps         *)
+  (* 4842015 unfolds       *)
+  (* 3.55s                 *)
   (* Unfold.run (-1) reify_list show_list (fun q -> length q (int2nat 10) &&& check_list q !!true &&& is_repeat q !!true); *)
-  (* 3.53s *)
 
-  (* 4694395 unifications *)
-  (* 11.61s *)
+
+  (*  4694395 unifications  *)
+  (* 10983082 interleavings *)
+  (* 11957395 steps         *)
+  (* 14526063 unfolds       *)
+  (* 11.60s                 *)
   (* Unfold.run (-1) reify_list show_list (fun q -> length q (int2nat 11) &&& check_list q !!true &&& is_repeat q !!true); *)
 
-  Printf.printf "\nUnifications: %d\n" !Unfold.unification_count
+  (* 14083190 unifications  *)
+  (* 36137953 interleavings *)
+  (* 39060884 steps         *)
+  (* 43578183 unfolds       *)
+  (* 42.92s                 *)
+  Unfold.run (-1) reify_list show_list (fun q -> length q (int2nat 12) &&& check_list q !!true &&& is_repeat q !!true);
+
+  Printf.printf "Unifications:  %10d\n" !Unfold.unification_count;
+  Printf.printf "Interleavings: %10d\n" !Unfold.interleaving_count;
+  Printf.printf "Step calls:    %10d\n" !Unfold.steps_calls;
+  Printf.printf "Unfold calls:  %10d\n" !Unfold.unfold_calls;
